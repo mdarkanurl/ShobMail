@@ -16,4 +16,15 @@ export class GmailServices {
             throw error;
        }
     }
+
+    async callback(token: string) {
+        try {
+            const { tokens } = await oauth2Client.getToken(token as string);
+
+            // Save tokens in DB
+            console.log(tokens)
+        } catch (error) {
+            throw error;
+        }
+    }
 }

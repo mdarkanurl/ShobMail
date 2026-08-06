@@ -24,5 +24,23 @@ export class GmailControllers {
             }, 500);
         }
     }
+
+    async callback(c: Context) {
+        try {
+            const token = c.req.query("code");
+            if(!token) return;
+
+            await this.gmailServices.callback(token);
+            return c.json({
+                success: true,
+                message: "You've successfully connected your gmail",
+            });
+        } catch (error) {
+            return c.json({
+                success: false,
+                message: "An unexpected error occurred"
+            }, 500);
+        }
+    }
 }
 

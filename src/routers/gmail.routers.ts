@@ -10,5 +10,9 @@ gmailRouter.get(
     (c) => gmailControllers.connect(c)
 );
 
+gmailRouter.get(
+    "callback",
+    (c) => gmailControllers.callback(c)
+);
 
 export default gmailRouter;
