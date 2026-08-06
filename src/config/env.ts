@@ -14,5 +14,4 @@ export const env = {
   PORT: Number(process.env.PORT ?? 3001),
   CLIENT_ID: getEnv("CLIENT_ID"),
   CLIENT_SECRET: getEnv("CLIENT_SECRET"),
-  DATABASE_URL: getEnv("DATABASE_URL"),
 };
