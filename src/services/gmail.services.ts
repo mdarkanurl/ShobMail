@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { oauth2Client } from "../utils";
+import { encrypt, oauth2Client } from "../utils";
 
 
 export class GmailServices {
@@ -25,8 +25,8 @@ export class GmailServices {
 
             // Save tokens in DB
             db.data.userCredentials.push({
-                access_token: tokens.access_token!,
-                refresh_token: tokens.refresh_token!,
+                access_token: encrypt(tokens.access_token!),
+                refresh_token: encrypt(tokens.refresh_token!),
                 scope: tokens.scope!,
                 token_type: tokens.token_type!,
                 refresh_token_expires_in: savedTokens.refresh_token_expires_in,
@@ -35,6 +35,7 @@ export class GmailServices {
 
             await db.write();
         } catch (error) {
+            console.log(error)
             throw error;
         }
     }
