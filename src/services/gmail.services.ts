@@ -1,3 +1,4 @@
+import { db } from "../db";
 import { oauth2Client } from "../utils";
 
 
@@ -19,10 +20,20 @@ export class GmailServices {
 
     async callback(token: string) {
         try {
-            const { tokens } = await oauth2Client.getToken(token as string);
+            const { tokens } = await oauth2Client.getToken(token);
+            const savedTokens = tokens as any;
 
             // Save tokens in DB
-            console.log(tokens)
+            db.data.userCredentials.push({
+                access_token: tokens.access_token!,
+                refresh_token: tokens.refresh_token!,
+                scope: tokens.scope!,
+                token_type: tokens.token_type!,
+                refresh_token_expires_in: savedTokens.refresh_token_expires_in,
+                expiry_date: tokens.expiry_date!
+            });
+
+            await db.write();
         } catch (error) {
             throw error;
         }
