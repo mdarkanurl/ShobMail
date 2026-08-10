@@ -3,6 +3,7 @@ import { google } from "googleapis";
 import { encrypt, oauth2Client } from "../utils";
 import type { gmail_v1, Auth } from 'googleapis';
 import { convert } from "html-to-text";
+import type { GmailData } from "../types";
 
 
 export class GmailServices {
@@ -50,31 +51,36 @@ export class GmailServices {
         oauth2Client.setCredentials(tokens);
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-        const { data } = await gmail.users.messages.list({ userId: 'me', maxResults: 10 });
+        const { data } = await gmail.users.messages.list({ userId: 'me', maxResults: 500 });
         if (!data.messages?.length) return;
 
         const CONCURRENCY = 10;
+        const parsedMessages: GmailData[] = [];
+
         for (let i = 0; i < data.messages.length; i += CONCURRENCY) {
             const batch = data.messages.slice(i, i + CONCURRENCY);
-            const fulls = await Promise.all(
+            const results = await Promise.allSettled(
                 batch.map(m => gmail.users.messages.get({ userId: 'me', id: m.id!, format: 'full' }))
             );
-            
-            const parsed = fulls.map(({ data: msg }) => ({
-                id: msg.id,
-                threadId: msg.threadId,
-                snippet: this.stripInvisibleChars(msg.snippet ?? ''),
-                from: this.getHeader(msg.payload?.headers, 'From'),
-                to: this.getHeader(msg.payload?.headers, 'To'),
-                subject: this.getHeader(msg.payload?.headers, 'Subject'),
-                date: this.getHeader(msg.payload?.headers, 'Date'),
-                body: this.stripInvisibleChars(this.getCleanBody(msg.payload)),
-            }));
 
-            console.log(parsed);
-            // push fulls to your queue here
-    
+            for (const result of results) {
+                if (result.status !== 'fulfilled') continue;
+                const msg = result.value.data;
+                parsedMessages.push({
+                    id: msg.id,
+                    threadId: msg.threadId,
+                    snippet: this.stripInvisibleChars(msg.snippet ?? ''),
+                    from: this.getHeader(msg.payload?.headers, 'From'),
+                    to: this.getHeader(msg.payload?.headers, 'To'),
+                    subject: this.getHeader(msg.payload?.headers, 'Subject'),
+                    date: this.getHeader(msg.payload?.headers, 'Date'),
+                    body: this.stripInvisibleChars(this.getCleanBody(msg.payload)),
+                });
+            }
         }
+
+        db.data.gmailData.push(...parsedMessages);
+        await db.write();
     }
 
     private decodeBase64Url(data: string): string {
