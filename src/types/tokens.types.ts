@@ -7,3 +7,14 @@ export type UserCredentials = {
     refresh_token_expires_in: number
     expiry_date: number
 }
+
+export type GmailData = {
+    id: string | null | undefined
+    threadId: string | undefined | null
+    snippet: string
+    from: string
+    to: string
+    subject: string
+    date: string
+    body: string
+}
