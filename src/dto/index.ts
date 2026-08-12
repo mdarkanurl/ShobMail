@@ -1,0 +1,1 @@
+export { type SenderAndSourceInsightsDto, senderAndSourceInsightsSchema} from "./statistics.dto";
