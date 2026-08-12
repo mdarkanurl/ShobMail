@@ -1,10 +1,4 @@
-import { JSONFilePreset } from "lowdb/node";
-import type { UserCredentials, GmailData } from "../types";
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { env } from "../config";
 
-
-const defaultData = {
-  userCredentials: [] as UserCredentials[],
-  gmailData: [] as GmailData[]
-};
-
-export const db = await JSONFilePreset("db.json", defaultData);
+export const db = drizzle(env.DATABASE_URL);
