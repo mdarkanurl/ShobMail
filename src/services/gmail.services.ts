@@ -1,6 +1,6 @@
-import { db } from "../db";
+import { db, gmailData, userCredentials, users } from "../db";
 import { google } from "googleapis";
-import { encrypt, oauth2Client } from "../utils";
+import { CustomError, encrypt, oauth2Client } from "../utils";
 import type { gmail_v1, Auth } from 'googleapis';
 import { convert } from "html-to-text";
 import type { GmailData } from "../types";
@@ -12,10 +12,13 @@ export class GmailServices {
        try {
             return oauth2Client.generateAuthUrl({
                 access_type: "offline",
+                prompt: "consent",
                 scope: [
-                    "https://www.googleapis.com/auth/gmail.readonly"
+                    "https://www.googleapis.com/auth/gmail.readonly",
+                    "https://www.googleapis.com/auth/userinfo.email",
+                    "https://www.googleapis.com/auth/userinfo.profile",
+                    "openid",
                 ],
-                prompt: "consent"
             });
        } catch (error) {
             throw error;
@@ -27,27 +30,51 @@ export class GmailServices {
             const { tokens } = await oauth2Client.getToken(token);
             const savedTokens = tokens as any;
 
-            // Save tokens in DB
-            db.data.userCredentials.push({
-                access_token: encrypt(tokens.access_token!),
-                refresh_token: encrypt(tokens.refresh_token!),
-                scope: tokens.scope!,
-                token_type: tokens.token_type!,
-                refresh_token_expires_in: savedTokens.refresh_token_expires_in,
-                expiry_date: tokens.expiry_date!
+            oauth2Client.setCredentials(tokens);
+
+            // Google OAuth2 API
+            const oauth2 = google.oauth2({
+                version: "v2",
+                auth: oauth2Client,
             });
 
-            await db.write();
+            // Get Google account information
+            const { data } = await oauth2.userinfo.get();
 
-            // read email and send those to queue
-            void this.syncGmail(tokens).catch(err => console.error('gmail sync failed', err));
+            if (!data.email) throw new CustomError("Email is required", 400);
+
+            // create user
+            const user = await db.insert(users).values({
+                email: data.email,
+                googleId: data.id,
+                name: data.name,
+                picture: data.picture,
+                verifiedEmail: data.verified_email
+            }).returning({
+                userId: users.id
+            });
+
+            if(!user[0]?.userId) throw new CustomError("Failed to create user", 500);
+
+            await db.insert(userCredentials).values({
+                userId: user[0].userId,
+                accessToken: encrypt(tokens.access_token!),
+                refreshToken: encrypt(tokens.refresh_token!),
+                scope: tokens.scope!,
+                tokenType: tokens.token_type!,
+                refreshTokenExpiresIn: savedTokens.refresh_token_expires_in,
+                expiryDate: tokens.expiry_date!
+            });
+
+            // read the emails
+            void this.syncGmail(tokens, user[0].userId).catch(err => console.error('gmail sync failed', err));
         } catch (error) {
             console.log(error)
             throw error;
         }
     }
 
-    private async syncGmail(tokens: Auth.Credentials) {
+    private async syncGmail(tokens: Auth.Credentials, userId: string) {
         oauth2Client.setCredentials(tokens);
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
@@ -67,7 +94,8 @@ export class GmailServices {
                 if (result.status !== 'fulfilled') continue;
                 const msg = result.value.data;
                 parsedMessages.push({
-                    id: msg.id,
+                    userId,
+                    id: msg.id!,
                     threadId: msg.threadId,
                     snippet: this.stripInvisibleChars(msg.snippet ?? ''),
                     from: this.getHeader(msg.payload?.headers, 'From'),
@@ -78,9 +106,8 @@ export class GmailServices {
                 });
             }
         }
-
-        db.data.gmailData.push(...parsedMessages);
-        await db.write();
+        
+        db.insert(gmailData).values(parsedMessages);
     }
 
     private decodeBase64Url(data: string): string {

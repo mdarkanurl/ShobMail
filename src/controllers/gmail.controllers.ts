@@ -1,5 +1,7 @@
 import type { Context } from "hono";
 import { GmailServices } from "../services";
+import { CustomError } from "../utils";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 
 export class GmailControllers {
     private gmailServices;
@@ -36,6 +38,11 @@ export class GmailControllers {
                 message: "You've successfully connected your gmail",
             });
         } catch (error) {
+            if(error instanceof CustomError) return c.json({
+                success: false,
+                message: error.message
+            }, error.statusCode as ContentfulStatusCode);
+            
             return c.json({
                 success: false,
                 message: "An unexpected error occurred"
