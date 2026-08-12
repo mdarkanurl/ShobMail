@@ -107,7 +107,7 @@ export class GmailServices {
             }
         }
         
-        db.insert(gmailData).values(parsedMessages);
+        await db.insert(gmailData).values(parsedMessages);
     }
 
     private decodeBase64Url(data: string): string {
