@@ -1,17 +1,20 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { env } from '../config';
+import { GmailServices } from "../services";
 
 const connection = new IORedis(
     env.REDIS_CONNECTION_URL,
     { maxRetriesPerRequest: null }
 );
 
+const gmailServices = new GmailServices();
+
 const worker = new Worker(
   'sync-mail',
   async job => {
     const { userId } = job.data;
-    console.log(userId);
+    await gmailServices.syncGmail(userId);
   },
   { connection },
 );

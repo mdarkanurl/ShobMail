@@ -1,9 +1,10 @@
 import { db, gmailData, userCredentials, users } from "../db";
 import { google } from "googleapis";
-import { CustomError, encrypt, oauth2Client } from "../utils";
+import { CustomError, decrypt, encrypt, oauth2Client, syncMailQueue } from "../utils";
 import type { gmail_v1, Auth } from 'googleapis';
 import { convert } from "html-to-text";
 import type { GmailData } from "../types";
+import { eq, getColumns } from 'drizzle-orm';
 
 
 export class GmailServices {
@@ -44,7 +45,7 @@ export class GmailServices {
             if (!data.email) throw new CustomError("Email is required", 400);
 
             // create user
-            const user = await db.insert(users).values({
+            const [user] = await db.insert(users).values({
                 email: data.email,
                 googleId: data.id,
                 name: data.name,
@@ -54,10 +55,10 @@ export class GmailServices {
                 userId: users.id
             });
 
-            if(!user[0]?.userId) throw new CustomError("Failed to create user", 500);
+            if(!user?.userId) throw new CustomError("Failed to create user", 500);
 
             await db.insert(userCredentials).values({
-                userId: user[0].userId,
+                userId: user.userId,
                 accessToken: encrypt(tokens.access_token!),
                 refreshToken: encrypt(tokens.refresh_token!),
                 scope: tokens.scope!,
@@ -67,15 +68,28 @@ export class GmailServices {
             });
 
             // read the emails
-            void this.syncGmail(tokens, user[0].userId).catch(err => console.error('gmail sync failed', err));
+            await syncMailQueue.add('syncMailQueue', { userId: user.userId });
         } catch (error) {
             console.log(error)
             throw error;
         }
     }
 
-    private async syncGmail(tokens: Auth.Credentials, userId: string) {
-        oauth2Client.setCredentials(tokens);
+    async syncGmail(UserId: string) {
+        // get tokens from db
+        const { id, userId, createdAt, updatedAt, ...tokensColumns } = getColumns(userCredentials);
+        const [tokens] = await db
+            .select(tokensColumns)
+            .from(userCredentials)
+            .where(eq(userCredentials.userId, UserId));
+
+        if(!tokens) return;
+
+        oauth2Client.setCredentials({
+            ...tokens,
+            access_token: decrypt(tokens.accessToken),
+            refresh_token: decrypt(tokens.refreshToken)
+        });
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
         const { data } = await gmail.users.messages.list({ userId: 'me', maxResults: 500 });
@@ -94,7 +108,7 @@ export class GmailServices {
                 if (result.status !== 'fulfilled') continue;
                 const msg = result.value.data;
                 parsedMessages.push({
-                    userId,
+                    userId: UserId,
                     id: msg.id!,
                     threadId: msg.threadId,
                     snippet: this.stripInvisibleChars(msg.snippet ?? ''),
