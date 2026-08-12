@@ -9,7 +9,8 @@ export type UserCredentials = {
 }
 
 export type GmailData = {
-    id: string | null | undefined
+    userId: string
+    id: string
     threadId: string | undefined | null
     snippet: string
     from: string
