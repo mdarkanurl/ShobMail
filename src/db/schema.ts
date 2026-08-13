@@ -34,7 +34,7 @@ export const userCredentials = pgTable("user_credentials", {
 });
 
 export const gmailData = pgTable("gmail_data", {
-  id: text("id").primaryKey(),
+  id: text("id").primaryKey().unique().notNull(),
   threadId: text("thread_id"),
 
   userId: uuid("user_id")

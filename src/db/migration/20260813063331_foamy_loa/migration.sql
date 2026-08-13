@@ -1,0 +1,1 @@
+ALTER TABLE "gmail_data" ADD CONSTRAINT "gmail_data_id_key" UNIQUE("id");

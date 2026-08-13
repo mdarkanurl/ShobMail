@@ -116,9 +116,12 @@ export class GmailServices {
             for (const result of results) {
                 if (result.status !== 'fulfilled') continue;
                 const msg = result.value.data;
+
+                if (!msg.id) return;
+
                 parsedMessages.push({
                     userId: UserId,
-                    id: msg.id!,
+                    id: msg.id,
                     threadId: msg.threadId,
                     snippet: this.stripInvisibleChars(msg.snippet ?? ''),
                     from: this.getHeader(msg.payload?.headers, 'From'),
@@ -130,7 +133,14 @@ export class GmailServices {
             }
         }
         
-        await db.insert(gmailData).values(parsedMessages);
+        try {
+            await db.insert(gmailData).values(parsedMessages);
+        } catch (error) {
+            if(error instanceof DrizzleQueryError &&
+                    error.cause?.message.startsWith("duplicate key value violates unique constraint")
+                ) return;
+            // log the other errors
+        }
     }
 
     private decodeBase64Url(data: string): string {
