@@ -4,7 +4,7 @@ import { CustomError, decrypt, encrypt, oauth2Client, syncMailQueue } from "../u
 import type { gmail_v1, Auth } from 'googleapis';
 import { convert } from "html-to-text";
 import type { GmailData } from "../types";
-import { eq, getColumns } from 'drizzle-orm';
+import { DrizzleQueryError, eq, getColumns } from 'drizzle-orm';
 
 
 export class GmailServices {
@@ -45,20 +45,29 @@ export class GmailServices {
             if (!data.email) throw new CustomError("Email is required", 400);
 
             // create user
-            const [user] = await db.insert(users).values({
-                email: data.email,
-                googleId: data.id,
-                name: data.name,
-                picture: data.picture,
-                verifiedEmail: data.verified_email
-            }).returning({
-                userId: users.id
-            });
-
-            if(!user?.userId) throw new CustomError("Failed to create user", 500);
+            let user: { userId: string } | undefined;
+            try {
+                [user] = await db.insert(users).values({
+                    email: data.email,
+                    googleId: data.id,
+                    name: data.name,
+                    picture: data.picture,
+                    verifiedEmail: data.verified_email
+                }).returning({
+                    userId: users.id
+                });
+            } catch (error) {
+                if(error instanceof DrizzleQueryError &&
+                    error.cause?.message.startsWith("duplicate key value violates unique constraint \"users_email_key\"")
+                ) {
+                    [user] = await db
+                        .select({ userId: users.id })
+                        .from(users);
+                }
+            }
 
             await db.insert(userCredentials).values({
-                userId: user.userId,
+                userId: user!.userId,
                 accessToken: encrypt(tokens.access_token!),
                 refreshToken: encrypt(tokens.refresh_token!),
                 scope: tokens.scope!,
@@ -68,7 +77,7 @@ export class GmailServices {
             });
 
             // read the emails
-            await syncMailQueue.add('syncMailQueue', { userId: user.userId });
+            await syncMailQueue.add('syncMailQueue', { userId: user!.userId });
         } catch (error) {
             console.log(error)
             throw error;
