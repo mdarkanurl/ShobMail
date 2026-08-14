@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { GmailServices } from "../services";
 import { CustomError } from "../utils";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
+import { setCookie } from "hono/cookie";
 
 export class GmailControllers {
     private gmailServices;
@@ -32,7 +33,26 @@ export class GmailControllers {
             const token = c.req.query("code");
             if(!token) return;
 
-            await this.gmailServices.callback(token);
+            const response = await this.gmailServices.callback(token);
+
+            setCookie(c, 'access_token', response.accessToken, {
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+                httpOnly: true,
+                maxAge: 30 * 60,
+                expires: new Date(Date.now() + 30 * 60 * 1000),
+                sameSite: 'Lax',
+            });
+
+            setCookie(c, 'refresh_token', response.refreshToken, {
+                path: '/',
+                secure: process.env.NODE_ENV === 'production',
+                httpOnly: true,
+                maxAge: 30 * 24 * 60 * 60,
+                expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                sameSite: 'Lax',
+            });
+            
             return c.json({
                 success: true,
                 message: "You've successfully connected your gmail",
