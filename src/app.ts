@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { cors } from "hono/cors";
-import { gmailRouter } from "./routers"
+import { gmailRouter, authRouter } from "./routers"
 
 const app = new Hono()
 
@@ -11,6 +11,7 @@ app.use('*', cors())
 
 // router
 app.route("/api/gmail", gmailRouter);
+app.route("/api/auth", authRouter);
 
 app.get("/", (c) => {
     return c.json({
