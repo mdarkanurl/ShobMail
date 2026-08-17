@@ -141,7 +141,7 @@ export class GmailServices {
                     from: this.getHeader(msg.payload?.headers, 'From'),
                     to: this.getHeader(msg.payload?.headers, 'To'),
                     subject: this.getHeader(msg.payload?.headers, 'Subject'),
-                    date: this.getHeader(msg.payload?.headers, 'Date'),
+                    date: new Date(this.getHeader(msg.payload?.headers, 'Date')),
                     body: this.stripInvisibleChars(this.getCleanBody(msg.payload)),
                 });
             }

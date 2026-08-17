@@ -6,6 +6,6 @@ export type GmailData = {
     from: string
     to: string
     subject: string
-    date: string
+    date: Date
     body: string
 }

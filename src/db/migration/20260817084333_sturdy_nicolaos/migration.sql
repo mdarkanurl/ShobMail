@@ -1,0 +1,1 @@
+ALTER TABLE "gmail_data" ALTER COLUMN "date" SET DATA TYPE timestamp with time zone USING "date"::timestamp with time zone;
