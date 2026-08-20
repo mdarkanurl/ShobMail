@@ -5,6 +5,7 @@ import type { gmail_v1, Auth } from 'googleapis';
 import { convert } from "html-to-text";
 import type { GmailData } from "../types";
 import { DrizzleQueryError, eq, getColumns } from 'drizzle-orm';
+import { env } from "../config";
 
 
 export class GmailServices {
@@ -93,7 +94,6 @@ export class GmailServices {
                 refreshToken
             }
         } catch (error) {
-            console.log(error)
             throw error;
         }
     }
@@ -115,14 +115,30 @@ export class GmailServices {
         });
         const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-        const { data } = await gmail.users.messages.list({ userId: 'me', maxResults: 500 });
-        if (!data.messages?.length) return;
+        const PAGE_SIZE = 500;
+        const allMessages: gmail_v1.Schema$Message[] = [];
+        let nextPageToken: string | undefined;
+        let count = 0;
+
+        do {
+            const { data } = await gmail.users.messages.list({
+                userId: 'me',
+                maxResults: PAGE_SIZE,
+                pageToken: nextPageToken,
+            });
+            if (!data.messages?.length) break;
+            allMessages.push(...data.messages);
+            nextPageToken = data.nextPageToken!;
+            count++;
+        } while (nextPageToken && count < parseInt(env.GMAIL_LIMIT)); // GMAIL_LIMIT define how many page it can fetch
+
+        if (!allMessages.length) return;
 
         const CONCURRENCY = 10;
         const parsedMessages: GmailData[] = [];
 
-        for (let i = 0; i < data.messages.length; i += CONCURRENCY) {
-            const batch = data.messages.slice(i, i + CONCURRENCY);
+        for (let i = 0; i < allMessages.length; i += CONCURRENCY) {
+            const batch = allMessages.slice(i, i + CONCURRENCY);
             const results = await Promise.allSettled(
                 batch.map(m => gmail.users.messages.get({ userId: 'me', id: m.id!, format: 'full' }))
             );
@@ -131,7 +147,7 @@ export class GmailServices {
                 if (result.status !== 'fulfilled') continue;
                 const msg = result.value.data;
 
-                if (!msg.id) return;
+                if (!msg.id) continue;
 
                 parsedMessages.push({
                     userId: UserId,
