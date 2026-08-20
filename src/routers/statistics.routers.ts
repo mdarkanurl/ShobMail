@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { StatisticsControllrs } from "../controllers";
+import { isAuthenticated } from "../middlewares";
 
 const statisticsRouter = new Hono();
 const statisticsControllrs = new StatisticsControllrs();
@@ -11,6 +12,7 @@ statisticsRouter.get(
         2. time_limit = 30d
     */ 
     "/top-sender",
+    isAuthenticated(),
     (c) => statisticsControllrs.senderAndSourceInsights(c)
 );
 

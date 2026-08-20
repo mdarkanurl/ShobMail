@@ -12,6 +12,7 @@ export class StatisticsControllrs {
     
     async senderAndSourceInsights(c: Context) {
         try {
+            const userId = c.get("jwtPayload")?.userId as string;
             const { success, data, error} = senderAndSourceInsightsSchema.safeParse(c.req.query());
 
             if(!success) return c.json({
@@ -20,11 +21,12 @@ export class StatisticsControllrs {
                 error
             }, 400);
 
-            const response = await this.statisticsServices.senderAndSourceInsights(data);
+            const response = await this.statisticsServices.senderAndSourceInsights(data, userId);
 
             return c.json({
                 success: true,
                 message: "",
+                data: response
             });
         } catch (error) {
             return c.json({
