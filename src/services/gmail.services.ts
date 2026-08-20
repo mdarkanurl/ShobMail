@@ -1,6 +1,6 @@
 import { db, gmailData, userCredentials, users } from "../db";
 import { google } from "googleapis";
-import { JwtUtils, CustomError, decrypt, encrypt, oauth2Client, syncMailQueue } from "../utils";
+import { JwtUtils, CustomError, decrypt, encrypt, oauth2Client, queue } from "../utils";
 import type { gmail_v1, Auth } from 'googleapis';
 import { convert } from "html-to-text";
 import type { GmailData } from "../types";
@@ -87,7 +87,7 @@ export class GmailServices {
             const refreshToken = this.jwt.generateJwtToken({ userId: user!.userId }, 60 * 60 * 24 * 30);
 
             // read the emails
-            await syncMailQueue.add('syncMailQueue', { userId: user!.userId });
+            await queue.add('syncMailQueue', { userId: user!.userId });
 
             return {
                 accessToken,

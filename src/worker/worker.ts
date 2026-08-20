@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { env } from '../config';
-import { GmailServices } from "../services";
+import { GmailServices, StatisticsServices } from "../services";
 
 const connection = new IORedis(
     env.REDIS_CONNECTION_URL,
@@ -9,12 +9,22 @@ const connection = new IORedis(
 );
 
 const gmailServices = new GmailServices();
+const statisticsServices = new StatisticsServices();
 
 const worker = new Worker(
-  'sync-mail',
+  'Queue',
   async job => {
-    const { userId } = job.data;
-    await gmailServices.syncGmail(userId);
+    switch (job.name) {
+      case "syncMailQueue":
+        const { userId } = job.data;
+        await gmailServices.syncGmail(userId);
+        break;
+      case "sender-source-insights":
+        statisticsServices.processSenderAndSourceInsightsRequest();
+        break;
+      default:
+        break;
+    }
   },
   { connection },
 );
