@@ -7,5 +7,6 @@ export {
     users,
     usersRelations,
     statisticsResults,
-    statisticsResultsEnum
+    statisticsResultsEnum,
+    statisticsResultsRelations
 } from "./schema";

@@ -61,7 +61,7 @@ export const statisticsResultsEnum = pgEnum(
 );
 
 export const statisticsResults = pgTable("statistics_results", {
-  id: text("id").primaryKey().unique().notNull(),
+  id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -77,6 +77,7 @@ export const statisticsResults = pgTable("statistics_results", {
 export const usersRelations = relations(users, ({ many }) => ({
   credentials: many(userCredentials),
   emails: many(gmailData),
+  statisticsResults: many(statisticsResults)
 }));
 
 export const userCredentialsRelations = relations(userCredentials, ({ one }) => ({
@@ -85,4 +86,8 @@ export const userCredentialsRelations = relations(userCredentials, ({ one }) => 
 
 export const gmailDataRelations = relations(gmailData, ({ one }) => ({
   user: one(users, { fields: [gmailData.userId], references: [users.id] }),
+}));
+
+export const statisticsResultsRelations = relations(statisticsResults, ({ one }) => ({
+  user: one(users, { fields: [statisticsResults.userId], references: [users.id] }),
 }));

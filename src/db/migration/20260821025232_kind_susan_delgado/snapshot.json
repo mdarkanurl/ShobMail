@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "80cb13f1-1836-481f-94c4-94fbfbc38907",
+  "id": "76fbe24f-cc56-442b-8472-0c6da55f0c23",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -171,11 +171,11 @@
       "table": "gmail_data"
     },
     {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
       "name": "id",
@@ -582,17 +582,6 @@
       "name": "gmail_data_id_key",
       "schema": "public",
       "table": "gmail_data",
-      "entityType": "uniques"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
-        "id"
-      ],
-      "nullsNotDistinct": false,
-      "name": "statistics_results_id_key",
-      "schema": "public",
-      "table": "statistics_results",
       "entityType": "uniques"
     },
     {

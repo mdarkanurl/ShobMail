@@ -13,7 +13,7 @@ CREATE TABLE "gmail_data" (
 );
 --> statement-breakpoint
 CREATE TABLE "statistics_results" (
-	"id" text PRIMARY KEY UNIQUE,
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"user_id" uuid NOT NULL,
 	"status" "statistics_results_enum" DEFAULT 'Pending'::"statistics_results_enum" NOT NULL,
 	"data" json,

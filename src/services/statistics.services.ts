@@ -1,5 +1,5 @@
 import { gt, eq, and } from "drizzle-orm";
-import { db, gmailData } from "../db";
+import { db, gmailData, statisticsResults } from "../db";
 import type { SenderAndSourceInsightsDto } from "../dto";
 import { queue } from "../utils";
 
@@ -25,7 +25,12 @@ export class StatisticsServices {
                 )
                 .limit(data.gmail_limit);
 
-            queue.add('sender-source-insights', { userId, gmails });
+            const [result] = await db
+                .insert(statisticsResults)
+                .values({ userId })
+                .returning({ id: statisticsResults.id });
+
+            queue.add('sender-source-insights', { userId, gmails, resultId: result?.id });
             return "Your request is in process"
         } catch (error) {
             console.log(error);
