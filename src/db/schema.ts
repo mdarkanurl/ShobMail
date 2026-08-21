@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/_relations";
-import { pgTable, text, integer, bigint, timestamp, uuid, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, bigint, timestamp, uuid, boolean, pgEnum, json } from "drizzle-orm/pg-core";
 
 
 export const users = pgTable("users", {
@@ -49,6 +49,28 @@ export const gmailData = pgTable("gmail_data", {
   body: text("body").notNull(),
 
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const statisticsResultsEnum = pgEnum(
+  "statistics_results_enum",
+  [
+    "Pending",
+    "Completed",
+    "Failed"
+  ]
+);
+
+export const statisticsResults = pgTable("statistics_results", {
+  id: text("id").primaryKey().unique().notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+
+  status: statisticsResultsEnum("status").default("Pending").notNull(),
+  data: json("data"),
+
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 

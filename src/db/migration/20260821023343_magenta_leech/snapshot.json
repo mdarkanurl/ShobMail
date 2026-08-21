@@ -1,14 +1,30 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "5b27702a-3d4e-43aa-9f30-99cd6e5d9cb1",
+  "id": "80cb13f1-1836-481f-94c4-94fbfbc38907",
   "prevIds": [
-    "e28551f7-5aa7-457c-b3a9-58a9bf991873"
+    "00000000-0000-0000-0000-000000000000"
   ],
   "ddl": [
     {
+      "values": [
+        "Pending",
+        "Completed",
+        "Failed"
+      ],
+      "name": "statistics_results_enum",
+      "entityType": "enums",
+      "schema": "public"
+    },
+    {
       "isRlsEnabled": false,
       "name": "gmail_data",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "statistics_results",
       "entityType": "tables",
       "schema": "public"
     },
@@ -153,6 +169,84 @@
       "entityType": "columns",
       "schema": "public",
       "table": "gmail_data"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "statistics_results"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "user_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "statistics_results"
+    },
+    {
+      "type": "statistics_results_enum",
+      "typeSchema": "public",
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'Pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "statistics_results"
+    },
+    {
+      "type": "json",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "data",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "statistics_results"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "statistics_results"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "statistics_results"
     },
     {
       "type": "uuid",
@@ -417,6 +511,23 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
+      "name": "statistics_results_user_id_users_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "statistics_results"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "user_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "users",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
       "name": "user_credentials_user_id_users_id_fkey",
       "entityType": "fks",
       "schema": "public",
@@ -430,6 +541,16 @@
       "name": "gmail_data_pkey",
       "schema": "public",
       "table": "gmail_data",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "statistics_results_pkey",
+      "schema": "public",
+      "table": "statistics_results",
       "entityType": "pks"
     },
     {
@@ -461,6 +582,17 @@
       "name": "gmail_data_id_key",
       "schema": "public",
       "table": "gmail_data",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "statistics_results_id_key",
+      "schema": "public",
+      "table": "statistics_results",
       "entityType": "uniques"
     },
     {
