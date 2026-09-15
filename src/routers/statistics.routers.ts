@@ -16,4 +16,14 @@ statisticsRouter.get(
     (c) => statisticsControllrs.senderAndSourceInsights(c)
 );
 
+statisticsRouter.get(
+    /** query
+        1. gmail_limit = 500
+        2. time_limit = 30d
+    */ 
+    "/top-sender-results/:id",
+    isAuthenticated(),
+    (c) => statisticsControllrs.senderAndSourceInsights(c)
+);
+
 export default statisticsRouter;
