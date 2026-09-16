@@ -13,7 +13,7 @@ export const users = pgTable("users", {
   verifiedEmail: boolean("verified_email"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
 });
 
 export const userCredentials = pgTable("user_credentials", {
@@ -30,7 +30,7 @@ export const userCredentials = pgTable("user_credentials", {
   expiryDate: bigint("expiry_date", { mode: "number" }).notNull(),
 
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(() => new Date()),
 });
 
 export const gmailData = pgTable("gmail_data", {
@@ -70,7 +70,7 @@ export const statisticsResults = pgTable("statistics_results", {
   data: json("data"),
 
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(() => new Date()),
 });
 
 
