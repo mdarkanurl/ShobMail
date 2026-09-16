@@ -56,6 +56,36 @@ export class StatisticsServices {
         }
     }
 
+    async senderAndSourceInsightsResults(userId: string, resultId: string) {
+        try {
+            const [result] = await db
+                .select({
+                    id: statisticsResults.id,
+                    status: statisticsResults.status,
+                    data: statisticsResults.data,
+                    createdAt: statisticsResults.createdAt,
+                })
+                .from(statisticsResults)
+                .where(
+                    and(
+                        eq(statisticsResults.id, resultId),
+                        eq(statisticsResults.userId, userId)
+                    )
+                )
+                .limit(1);
+
+            if (!result) throw new CustomError("Result not found", 404);
+
+            return {
+                status: result.status,
+                data: result.data,
+                createdAt: result.createdAt,
+            };
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async processSenderAndSourceInsightsRequest(data: { gmails: GmailData[], resultId: string }): Promise<ResultType> {
         try {
             const { gmails, resultId } = data;

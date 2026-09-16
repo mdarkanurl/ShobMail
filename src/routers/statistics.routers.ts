@@ -11,19 +11,21 @@ statisticsRouter.get(
         1. gmail_limit = 500
         2. time_limit = 30d
     */ 
-    "/top-sender",
+    "/sender-source-info",
     isAuthenticated(),
     (c) => statisticsControllrs.senderAndSourceInsights(c)
 );
 
 statisticsRouter.get(
-    /** query
-        1. gmail_limit = 500
-        2. time_limit = 30d
+    /**
+        After sending request to /sender-source-info endpoint user start hitting
+        this endpoint with resultId.
+        QUERY
+        1. id = UUID
     */ 
-    "/top-sender-results/:id",
+    "/sender-source-info-results/:id",
     isAuthenticated(),
-    (c) => statisticsControllrs.senderAndSourceInsights(c)
+    (c) => statisticsControllrs.senderAndSourceInsightsResults(c)
 );
 
 export default statisticsRouter;

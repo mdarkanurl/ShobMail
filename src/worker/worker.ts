@@ -20,7 +20,7 @@ const worker = new Worker(
         await gmailServices.syncGmail(userId);
         break;
       case "sender-source-insights":
-        statisticsServices.processSenderAndSourceInsightsRequest();
+        statisticsServices.processSenderAndSourceInsightsRequest(job.data);
         break;
       default:
         break;
