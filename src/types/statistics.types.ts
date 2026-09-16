@@ -34,6 +34,6 @@ export type ResultType = {
     topCategories: TopCategoriesType[]
     topDomains: TopDomainsType[]
     sourceBreakdown: SourceBreakdownType
-    newSenders: NewSendersType
+    newSenders: NewSendersType[]
 }
 
