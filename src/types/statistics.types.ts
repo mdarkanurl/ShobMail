@@ -1,6 +1,5 @@
 type TopSendersType = {
     sender: string
-    email: string
     count: number
 }
 

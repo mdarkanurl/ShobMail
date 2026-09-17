@@ -90,16 +90,15 @@ export class StatisticsServices {
         try {
             const { gmails, resultId } = data;
 
+            // get top senders
             const topSenders = new Map<string, ResultType["topSenders"][number]>();
             for (const gmail of gmails) {
-                const email = gmail.from;
-                const subject = gmail.subject;
+                const sender = gmail.from;
 
-                const existing = topSenders.get(email);
+                const existing = topSenders.get(sender);
 
-                topSenders.set(email, {
-                    email,
-                    sender: existing?.sender ?? subject,
+                topSenders.set(sender, {
+                    sender: sender,
                     count: (existing?.count ?? 0) + 1,
                 });
             }
@@ -108,11 +107,34 @@ export class StatisticsServices {
                 [...topSenders.entries()].sort((a, b) => b[1].count - a[1].count)
             );
 
-            console.log(sortedTopSenders);
+            // get unique senders
+            const uniqueSenders = new Set<string>();
+            for(const { from } of gmails) {
+                const match = from.match(
+                    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+                );
+
+                if (match) {
+                    uniqueSenders.add(match[0]);
+                }
+            }
+
+            // get unique domains
+            const uniqueDomains = new Set<string>();
+            for (const { from } of gmails) {
+                const match = from.match(/@(.+)$/);
+
+                if (match && match[1]) {
+                    uniqueDomains.add(match[1]);
+                }
+            }
+
+            // get top categories
+
             return {
-                uniqueSenders: 0,
-                uniqueDomains: 0,
-                topSenders: Array.from(topSenders.values()),
+                uniqueSenders: uniqueSenders.size,
+                uniqueDomains: uniqueDomains.size,
+                topSenders: Array.from(sortedTopSenders.values()),
                 topCategories: [{ categories: "Job Alter", count: 0 }],
                 topDomains: [{ domain: "", count: 0 }],
                 sourceBreakdown: {
