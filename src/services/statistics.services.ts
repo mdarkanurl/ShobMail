@@ -3,6 +3,7 @@ import { db, gmailData, statisticsResults, users } from "../db";
 import type { SenderAndSourceInsightsDto } from "../dto";
 import { CustomError, queue } from "../utils";
 import type { GmailData, ResultType } from "../types";
+import { classifyBulkEmails } from "../utils";
 
 export class StatisticsServices {
     
@@ -161,20 +162,37 @@ export class StatisticsServices {
                     count,
                 }));
 
+            // Classify emails using AI for source breakdown
+            const emailClassifications = await classifyBulkEmails(
+                gmails.map(g => ({
+                    from: g.from,
+                    subject: g.subject,
+                    snippet: g.snippet,
+                }))
+            );
+
+            const sourceBreakdown = {
+                personal: 0,
+                business: 0,
+                marketing: 0,
+                notifications: 0,
+                newsletters: 0,
+                unknown: 0,
+            };
+
+            for (const gmail of gmails) {
+                const category = emailClassifications.get(gmail.from) || "unknown";
+                sourceBreakdown[category as keyof typeof sourceBreakdown]++;
+            }
+
             return {
                 uniqueSenders: uniqueSenders.size,
                 uniqueDomains: uniqueDomains.size,
                 topSenders: Array.from(sortedTopSenders.values()),
                 topCategories: topCategories,
                 topDomains: Array.from(sortedTopDomains.values()),
-                sourceBreakdown: {
-                    companies: 0,
-                    jobBoards: 0,
-                    newsletters: 0,
-                    personal: 0,
-                    socialMedia: 0
-                },
-                newSenders: newSenders
+                newSenders: newSenders,
+                sourceBreakdown
             };
         } catch (error) {
             throw error;

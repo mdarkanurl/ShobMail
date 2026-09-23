@@ -14,11 +14,12 @@ type TopCategoriesType = {
 }
 
 type SourceBreakdownType = {
-    jobBoards: number
-    companies: number
-    newsletters: number
-    socialMedia: number
-    personal: number
+    "personal": number,
+    "business": number,
+    "marketing": number,
+    "notifications": number,
+    "newsletters": number,
+    "unknown": number
 }
 
 type NewSendersType = {
