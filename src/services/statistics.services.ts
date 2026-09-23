@@ -94,6 +94,7 @@ export class StatisticsServices {
             const uniqueSenders = new Set<string>();
             const uniqueDomains = new Set<string>();
             const categoryCounts = new Map<string, number>();
+            const topDomains = new Map<string, ResultType["topDomains"][number]>();
             
             for (const gmail of gmails) {          
                 // get top senders
@@ -114,7 +115,15 @@ export class StatisticsServices {
                 // get unique domains
                 const matchForUniqueDomains = gmail.from.match(/@(.+)$/);
                 if (matchForUniqueDomains && matchForUniqueDomains[1]) {
-                    uniqueDomains.add(matchForUniqueDomains[1]);
+                    const domain = matchForUniqueDomains[1];
+                    uniqueDomains.add(domain);
+
+                    // get top domains
+                    const existingDomain = topDomains.get(domain);
+                    topDomains.set(domain, {
+                        domain: domain,
+                        count: (existingDomain?.count ?? 0) + 1,
+                    });
                 }
 
                 // get top categories
@@ -125,6 +134,10 @@ export class StatisticsServices {
 
             const sortedTopSenders = new Map(
                 [...topSenders.entries()].sort((a, b) => b[1].count - a[1].count)
+            );
+
+            const sortedTopDomains = new Map(
+                [...topDomains.entries()].sort((a, b) => b[1].count - a[1].count)
             );
 
             const topCategories = [...categoryCounts.entries()]
@@ -139,7 +152,7 @@ export class StatisticsServices {
                 uniqueDomains: uniqueDomains.size,
                 topSenders: Array.from(sortedTopSenders.values()),
                 topCategories: topCategories,
-                topDomains: [{ domain: "", count: 0 }],
+                topDomains: Array.from(sortedTopDomains.values()),
                 sourceBreakdown: {
                     companies: 0,
                     jobBoards: 0,
