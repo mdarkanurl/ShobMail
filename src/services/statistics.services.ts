@@ -90,52 +90,55 @@ export class StatisticsServices {
         try {
             const { gmails, resultId } = data;
 
-            // get top senders
             const topSenders = new Map<string, ResultType["topSenders"][number]>();
-            for (const gmail of gmails) {
+            const uniqueSenders = new Set<string>();
+            const uniqueDomains = new Set<string>();
+            const categoryCounts = new Map<string, number>();
+            
+            for (const gmail of gmails) {          
+                // get top senders
                 const sender = gmail.from;
-
                 const existing = topSenders.get(sender);
 
                 topSenders.set(sender, {
                     sender: sender,
                     count: (existing?.count ?? 0) + 1,
                 });
+
+                // get unique senders
+                const matchForUniqueSenders = gmail.from.match(
+                    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
+                );
+                if (matchForUniqueSenders) uniqueSenders.add(matchForUniqueSenders[0]);
+
+                // get unique domains
+                const matchForUniqueDomains = gmail.from.match(/@(.+)$/);
+                if (matchForUniqueDomains && matchForUniqueDomains[1]) {
+                    uniqueDomains.add(matchForUniqueDomains[1]);
+                }
+
+                // get top categories
+                for (const category of gmail.category) {
+                    categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1);
+                }
             }
 
             const sortedTopSenders = new Map(
                 [...topSenders.entries()].sort((a, b) => b[1].count - a[1].count)
             );
 
-            // get unique senders
-            const uniqueSenders = new Set<string>();
-            for(const { from } of gmails) {
-                const match = from.match(
-                    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
-                );
-
-                if (match) {
-                    uniqueSenders.add(match[0]);
-                }
-            }
-
-            // get unique domains
-            const uniqueDomains = new Set<string>();
-            for (const { from } of gmails) {
-                const match = from.match(/@(.+)$/);
-
-                if (match && match[1]) {
-                    uniqueDomains.add(match[1]);
-                }
-            }
-
-            // get top categories
+            const topCategories = [...categoryCounts.entries()]
+                .sort((a, b) => b[1] - a[1])
+                .map(([category, count]) => ({
+                    category,
+                    count,
+                }));
 
             return {
                 uniqueSenders: uniqueSenders.size,
                 uniqueDomains: uniqueDomains.size,
                 topSenders: Array.from(sortedTopSenders.values()),
-                topCategories: [{ categories: "Job Alter", count: 0 }],
+                topCategories: topCategories,
                 topDomains: [{ domain: "", count: 0 }],
                 sourceBreakdown: {
                     companies: 0,

@@ -9,7 +9,7 @@ type TopDomainsType = {
 }
 
 type TopCategoriesType = {
-    categories: "Job Alter" | "Promoational"
+    category: string
     count: number
 }
 
