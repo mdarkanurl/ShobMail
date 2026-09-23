@@ -95,6 +95,7 @@ export class StatisticsServices {
             const uniqueDomains = new Set<string>();
             const categoryCounts = new Map<string, number>();
             const topDomains = new Map<string, ResultType["topDomains"][number]>();
+            const senderFirstSeen = new Map<string, Date>();
             
             for (const gmail of gmails) {          
                 // get top senders
@@ -105,6 +106,12 @@ export class StatisticsServices {
                     sender: sender,
                     count: (existing?.count ?? 0) + 1,
                 });
+
+                // get first seen date for each sender
+                const existingFirstSeen = senderFirstSeen.get(sender);
+                if (!existingFirstSeen || new Date(gmail.date) < existingFirstSeen) {
+                    senderFirstSeen.set(sender, new Date(gmail.date));
+                }
 
                 // get unique senders
                 const matchForUniqueSenders = gmail.from.match(
@@ -140,6 +147,13 @@ export class StatisticsServices {
                 [...topDomains.entries()].sort((a, b) => b[1].count - a[1].count)
             );
 
+            const newSenders = [...senderFirstSeen.entries()]
+                .map(([sender, firstSeen]) => ({
+                    sender,
+                    firstSeen,
+                }))
+                .sort((a, b) => b.firstSeen.getTime() - a.firstSeen.getTime());
+
             const topCategories = [...categoryCounts.entries()]
                 .sort((a, b) => b[1] - a[1])
                 .map(([category, count]) => ({
@@ -160,7 +174,7 @@ export class StatisticsServices {
                     personal: 0,
                     socialMedia: 0
                 },
-                newSenders: [{sender: "", firstSeen: new Date()}]
+                newSenders: newSenders
             };
         } catch (error) {
             throw error;
