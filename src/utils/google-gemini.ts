@@ -1,7 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { env } from "../config";
+import { GoogleGenAI } from "@google/genai";
+import { env } from "../config/env";
 
-const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+const gemini = new GoogleGenAI({
+  apiKey: env.GEMINI_API_KEY,
+});
 
 interface ClassifyEmailRequest {
     from: string;
@@ -30,16 +32,16 @@ Return ONLY the category name in lowercase, nothing else.`;
 
 export const classifyEmailWithAI = async (email: ClassifyEmailRequest): Promise<SourceCategory> => {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
         const prompt = CLASSIFICATION_PROMPT
             .replace("{from}", email.from)
             .replace("{subject}", email.subject)
             .replace("{snippet}", email.snippet);
 
-        const result = await model.generateContent(prompt);
-        const response = result.response;
-        const category = response.text().trim().toLowerCase() as SourceCategory;
+        const result = await gemini.models.generateContent({
+            model: "gemini-3.8-flash",
+            contents: prompt,
+        });
+        const category = result.text!.trim().toLowerCase() as SourceCategory;
 
         const validCategories: SourceCategory[] = ["personal", "business", "marketing", "notifications", "newsletters", "unknown"];
         if (validCategories.includes(category)) {

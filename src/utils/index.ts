@@ -4,4 +4,4 @@ export { decrypt, encrypt } from "./crypto";
 export { queue } from "./queue";
 export { JwtUtils } from "./jwt";
 export { isValidUUID } from "./isUUID";
-export { classifyBulkEmails, classifyEmailWithAI } from "./google.gemini"
+export { classifyBulkEmails, classifyEmailWithAI } from "./google-gemini"
