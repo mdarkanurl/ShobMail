@@ -1,0 +1,1 @@
+ALTER TABLE "gmail_data" ADD COLUMN "categorys" text[] NOT NULL;

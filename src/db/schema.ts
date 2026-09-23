@@ -47,6 +47,7 @@ export const gmailData = pgTable("gmail_data", {
   subject: text("subject").notNull(),
   date: timestamp('date', { withTimezone: true }).notNull(),
   body: text("body").notNull(),
+  category: text('categorys').array().notNull(),
 
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
