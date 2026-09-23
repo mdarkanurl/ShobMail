@@ -87,7 +87,7 @@ export class StatisticsServices {
         }
     }
 
-    async processSenderAndSourceInsightsRequest(data: { gmails: GmailData[], resultId: string }): Promise<ResultType> {
+    async processSenderAndSourceInsightsRequest(data: { gmails: GmailData[], resultId: string }): Promise<void> {
         try {
             const { gmails, resultId } = data;
 
@@ -98,8 +98,7 @@ export class StatisticsServices {
             const topDomains = new Map<string, ResultType["topDomains"][number]>();
             const senderFirstSeen = new Map<string, Date>();
             
-            for (const gmail of gmails) {          
-                // get top senders
+            for (const gmail of gmails) {
                 const sender = gmail.from;
                 const existing = topSenders.get(sender);
 
@@ -135,7 +134,7 @@ export class StatisticsServices {
                 }
 
                 // get top categories
-                for (const category of gmail.category) {
+                for (const category of gmail.categories ?? []) {
                     categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1);
                 }
             }
@@ -185,15 +184,17 @@ export class StatisticsServices {
                 sourceBreakdown[category as keyof typeof sourceBreakdown]++;
             }
 
-            return {
-                uniqueSenders: uniqueSenders.size,
-                uniqueDomains: uniqueDomains.size,
-                topSenders: Array.from(sortedTopSenders.values()),
-                topCategories: topCategories,
-                topDomains: Array.from(sortedTopDomains.values()),
-                newSenders: newSenders,
-                sourceBreakdown
-            };
+            await db.update(statisticsResults).set({
+                data: {
+                    uniqueSenders: uniqueSenders.size,
+                    uniqueDomains: uniqueDomains.size,
+                    topSenders: Array.from(sortedTopSenders.values()),
+                    topCategories: topCategories,
+                    topDomains: Array.from(sortedTopDomains.values()),
+                    newSenders: newSenders,
+                    sourceBreakdown
+                }
+            }).where(eq(statisticsResults.id, resultId))
         } catch (error) {
             throw error;
         }

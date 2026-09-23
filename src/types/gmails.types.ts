@@ -8,5 +8,5 @@ export type GmailData = {
     subject: string
     date: Date
     body: string
-    category: string[]
+    categories: string[]
 }

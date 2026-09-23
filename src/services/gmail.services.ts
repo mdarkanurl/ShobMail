@@ -159,7 +159,7 @@ export class GmailServices {
                     subject: this.getHeader(msg.payload?.headers, 'Subject'),
                     date: new Date(this.getHeader(msg.payload?.headers, 'Date')),
                     body: this.stripInvisibleChars(this.getCleanBody(msg.payload)),
-                    category: msg.labelIds ?? []
+                    categories: msg.labelIds ?? []
                 });
             }
         }
