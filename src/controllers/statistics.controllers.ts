@@ -38,7 +38,7 @@ export class StatisticsControllrs {
 
     async senderAndSourceInsightsResults(c: Context) {
         try {
-            // const userId = c.get("jwtPayload")?.userId as string;
+            const userId = c.get("jwtPayload")?.userId as string;
             const resultId = c.req.param("id");
 
             if (!resultId || !isValidUUID(resultId)) {
@@ -49,7 +49,7 @@ export class StatisticsControllrs {
             }
 
             const result = await this.statisticsServices
-                .senderAndSourceInsightsResults("f565349a-f876-4b4e-bb3f-33040fd5ebcb", resultId);
+                .senderAndSourceInsightsResults(userId, resultId);
 
             return c.json({
                 success: true,
